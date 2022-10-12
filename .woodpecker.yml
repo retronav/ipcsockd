@@ -1,0 +1,17 @@
+clone:
+  git:
+    image: bash
+    commands:
+      - cd /home/pranav/CI
+      - if [ -d ipcsockd ]; then
+      -   cd ipcsockd
+      -   git pull
+      - else
+      -   git clone https://git.exozy.me/pranav/ipcsockd.git
+      - fi
+
+pipeline:
+  build:
+    image: fish
+    commands:
+      - cargo build --release
