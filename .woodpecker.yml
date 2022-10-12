@@ -8,10 +8,12 @@ clone:
       -   git pull
       - else
       -   git clone https://git.exozy.me/pranav/ipcsockd.git
+      -   cd ipcsockd
       - fi
 
 pipeline:
   build:
     image: fish
     commands:
+      - cd /home/pranav/CI/ipcsockd
       - cargo build --release
