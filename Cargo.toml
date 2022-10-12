@@ -1,0 +1,16 @@
+[package]
+name = "ipcsockd"
+version = "0.1.0"
+edition = "2021"
+
+# Compiler optimizations picked up from
+# https://arusahni.net/blog/2020/03/optimizing-rust-binary-size.html
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+
+[dependencies]
+clap = { version = "4.0.11", features = ["derive"] }
+signal-hook = "*"
+tokio = { version = "1", features = ["full"] }
