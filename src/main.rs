@@ -2,6 +2,8 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+pub mod cli;
+
 use clap::Parser;
 use signal_hook::consts::TERM_SIGNALS;
 use signal_hook::iterator::Signals;
@@ -11,28 +13,14 @@ use std::path::Path;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
 use tokio::net::UnixListener;
+use tokio::task;
 use tokio::{fs, process};
-
-/// A super-server daemon for UNIX domain sockets.
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-struct Cli {
-    /// Path of the UNIX socket to listen on.
-    path: String,
-
-    /// Command with arguments to execute for every incoming connection.
-    cmd: Vec<String>,
-
-    /// Maximum concurrent connections per second.
-    #[arg(short, long, default_value_t = 40u32)]
-    limit: u32,
-}
 
 static START_MESSAGE: &str = "OK";
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    let cli = Cli::parse();
+    let cli = cli::Cli::parse();
     let limit = cli.limit.clone();
 
     if Path::new(cli.path.as_str()).exists() {
@@ -42,7 +30,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let listener = UnixListener::bind(cli.path.clone())?;
     let thread_count = Arc::new(AtomicU32::new(0));
 
-    tokio::spawn(async move {
+    let mainloop = tokio::spawn(async move {
         eprintln!("{}", START_MESSAGE);
         loop {
             if thread_count.load(Ordering::Relaxed) < limit {
@@ -54,7 +42,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 let cmd = cli.cmd.clone();
 
                 thread_count.fetch_add(1, Ordering::Relaxed);
-                tokio::spawn(async move {
+                task::spawn(async move {
                     handle_conn(cmd, conn_as_fd, thread_count).await;
                 })
                 .await
@@ -67,19 +55,22 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     for _ in signals.forever() {
         fs::remove_file(cli.path.clone()).await?;
+        // mainloop will probably abort on its own when its dropped, but better
+        // be safe.
+        mainloop.abort();
         break;
     }
 
     Ok(())
 }
 
-async fn handle_conn(sock_cmd: Vec<String>, conn_as_fd: OwnedFd, count: Arc<AtomicU32>) {
-    let (_, cmd_args) = sock_cmd.as_slice().split_first().unwrap();
+async fn handle_conn(cmd: Vec<String>, conn_as_fd: OwnedFd, count: Arc<AtomicU32>) {
+    let (_, cmd_args) = cmd.as_slice().split_first().unwrap();
 
     let stdin = conn_as_fd.try_clone().unwrap();
     let stdout = conn_as_fd.try_clone().unwrap();
 
-    let mut handle = process::Command::new(sock_cmd.first().to_owned().unwrap())
+    let mut handle = process::Command::new(cmd.first().to_owned().unwrap())
         .args(cmd_args.to_owned())
         .stdin(stdin)
         .stdout(stdout)
