@@ -1,3 +1,4 @@
+# This script runs on ci.exozy.me to update ipcsockd running on exozyme.
 clone:
   git:
     image: bash

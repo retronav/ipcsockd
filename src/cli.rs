@@ -16,7 +16,7 @@ use clap::{CommandFactory, Parser};
 /// Here, the arguments --arg1 and --arg2 are passed to mycommand during the time
 /// of execution instead of being parsed by ipcsockd.
 ///
-/// ipcsockd prints a message \"OK\" to standard error when it is ready to receive
+/// ipcsockd prints a message "OK" to standard error when it is ready to receive
 /// requests. This can be utilised to check the status of the server.
 ///
 /// ipcsockd limits the maximum amount of concurrent requests at a particular point
