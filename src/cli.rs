@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2022 Pranav Karawale <https://karawale.in>
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 #[allow(unused_imports)]
 use clap::{CommandFactory, Parser};
 
@@ -16,13 +20,14 @@ use clap::{CommandFactory, Parser};
 /// Here, the arguments --arg1 and --arg2 are passed to mycommand during the time
 /// of execution instead of being parsed by ipcsockd.
 ///
+/// WARNING: ipcsockd will remove the socket if it already exists.
+///
 /// ipcsockd prints a message "OK" to standard error when it is ready to receive
 /// requests. This can be utilised to check the status of the server.
 ///
 /// ipcsockd limits the maximum amount of concurrent requests at a particular point
 /// in time, which can be configured using flags. Advanced rate-limiting and similar
 /// utilities are left to be handled by a reverse proxy.
-
 #[derive(Parser, Debug)]
 #[command(author, version, about, verbatim_doc_comment)]
 pub struct Cli {
