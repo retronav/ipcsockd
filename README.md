@@ -76,15 +76,14 @@ It printed the request curl sent to the socket.
 
 ## Install
 
-ipcsockd requires a Rust toolchain installed. To build a debug build (ideal for
-testing/reporting bugs), run
+ipcsockd requires a [Rust toolchain](https://rustup.rs) to compile. To build a
+debug build (ideal for testing/reporting bugs), run
 
 ```
 cargo build
 ```
 
-For a release build (no debug information, ideal to distribute or run in
-production), run
+For a release build (ideal to distribute or run in production), run
 
 ```
 cargo build --release
